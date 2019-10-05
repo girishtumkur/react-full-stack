@@ -7,6 +7,8 @@ import uuid from 'uuid';
 import axios from 'axios';
 const url = "http://localhost:9000";
 
+import {history} from './history'
+
 export function* taskCreationSaga() {
 while (true) {
     const action= yield take(mutations.REQUEST_TASK_CREATION);
@@ -47,4 +49,34 @@ export function* taskModificationSaga() {
             console.log("GOT response..........", response);
           })
     }
+}
+
+export function* userAuthenicationSaga() {
+    while (true) {
+        const {username,password} = yield take(mutations.REQUEST_AUTHENTICATE_USER);
+        
+        try {
+            console.log('incide userAuthenicationSaga:',username,password);
+            const {data} = yield axios.post(url+'/authenticate', {username,password});
+
+            console.log('user dataaa:'+data);
+            if (!data)
+                throw new Error();
+
+            console.log('authenticated:',data);  
+            
+            yield put(mutations.setState(data.state));
+
+            yield put(mutations.processAuthenticateUser(mutations.AUTHENTICATED));
+            history.push('/dashboard');
+
+
+        }
+        catch(e) {
+            console.log("can't authenticate...........................");
+            yield put(mutations.processAuthenticateUser(mutations.NOT_AUTHENTICATED));
+        }
+
     }
+
+}
